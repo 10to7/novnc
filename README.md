@@ -5,7 +5,7 @@ Based on https://github.com/psharkey/docker/tree/master/novnc
 
 ## Example
 
-You can run unix applications that require a $DISPLAY within a docker container.
+You can run unix applications that require a $DISPLAY withing a docker container.
 
 Below is an example `docker-compose.yml` opening intelliJ inside a browser on port 8080.
 ```yaml

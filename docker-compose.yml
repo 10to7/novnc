@@ -9,5 +9,3 @@ services:
       - DISPLAY_HEIGHT=968
     ports:
       - "8080:8080"
-      # If you want to externally connect to the $DISPLAY, uncomment this line
-      # - "6000:6000"
