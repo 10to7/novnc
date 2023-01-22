@@ -46,7 +46,6 @@ RUN apk add \
 	&& apk del git \
 	&& rm -rf /var/cache/apk/*
 
-
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 EXPOSE 8080 6000
