@@ -2,8 +2,8 @@ ARG ALPINE_VERSION=3
 
 FROM alpine:${ALPINE_VERSION}
 
-ARG NO_VNC_TAG=v1.4.0
-ARG WEB_SOCKIFY_TAG=v0.11.0
+ARG NO_VNC_TAG=v1.4.0 \
+    WEB_SOCKIFY_TAG=v0.11.0
 
 LABEL org.opencontainers.image.source="https://github.com/10to7/novnc" \
 	  org.opencontainers.image.licenses="MIT" \
@@ -24,19 +24,15 @@ ENV HOME=/root \
 	DISPLAY_HEIGHT=768
 
 # Install git, supervisor, VNC, & X11 packages
-RUN apk --update --upgrade add \
+RUN apk add \
 	bash \
 	git \
 	socat \
 	supervisor \
 	x11vnc \
 	xvfb \
-	fluxbox
-
-RUN echo "$NO_VNC_TAG"
-
-# Clone noVNC from github
-RUN git clone --depth 1 --branch "${NO_VNC_TAG}" https://github.com/novnc/noVNC.git /root/noVNC \
+	fluxbox --no-cache \
+    && git clone --depth 1 --branch "${NO_VNC_TAG}" https://github.com/novnc/noVNC.git /root/noVNC \
 	&& git clone --depth 1 --branch "${WEB_SOCKIFY_TAG}" https://github.com/novnc/websockify /root/noVNC/utils/websockify \
 	&& rm -rf /root/noVNC/.git \
 	&& rm -rf /root/noVNC/.gitignore \
@@ -47,7 +43,9 @@ RUN git clone --depth 1 --branch "${NO_VNC_TAG}" https://github.com/novnc/noVNC.
 	&& rm -rf /root/noVNC/tests \
 	&& rm -rf /root/noVNC/utils/websockify/.git \
 	&& rm -rf /root/noVNC/utils/websockify/.gitignore \
-	&& apk del git
+	&& apk del git \
+	&& rm -rf /var/cache/apk/*
+
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
