@@ -30,7 +30,8 @@ RUN apk --update --upgrade add \
 	socat \
 	supervisor \
 	x11vnc \
-	xvfb
+	xvfb \
+	fluxbox
 
 RUN echo "$NO_VNC_TAG"
 
