@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  novnc:  
+    build: .
+    image: 10to7/novnc:latest
+    environment:
+      # Adjust to your screen size
+      - DISPLAY_WIDTH=1600
+      - DISPLAY_HEIGHT=968
+    ports:
+      - "8080:8080"
