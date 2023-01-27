@@ -1,0 +1,9 @@
+#!/bin/bash
+# all platforms
+# linux/amd64,linux/arm64,linux/ppc64le,linux/s390x,linux/386,linux/arm/v7,linux/arm/v6
+source ../.env
+echo "Using ${SOURCE_BRANCH} (${SOURCE_COMMIT}): ${COMMIT_MSG}"
+docker buildx build \
+	--platform linux/amd64,linux/arm64 \
+	--progress plain --push \
+	-f $DOCKERFILE_PATH -t $IMAGE_NAME .

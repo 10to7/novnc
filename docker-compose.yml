@@ -1,7 +1,13 @@
 version: '3.8'
 services:
   novnc:  
-    build: .
+    build:
+      context: .
+      args:
+        ALPINE_VERSION: ${ALPINE_VERSION:-3}
+        TARGETPLATFORM: amd64
+        NO_VNC_TAG: ${NO_VNC_TAG:-v1.4.0}
+        WEB_SOCKIFY_TAG: ${WEB_SOCKIFY_TAG:-v0.11.0}
     image: 10to7/novnc:latest
     environment:
       # Adjust to your screen size

@@ -1,17 +1,41 @@
 ARG ALPINE_VERSION=3
+ARG NO_VNC_TAG=v1.4.0
+ARG WEB_SOCKIFY_TAG=v0.11.0
+
+FROM alpine:${ALPINE_VERSION} AS git_sources
+RUN apk add \
+    bash \
+    git
+
+ARG NO_VNC_TAG \
+    WEB_SOCKIFY_TAG
+
+RUN git clone --depth 1 --branch "${NO_VNC_TAG}" https://github.com/novnc/noVNC.git /tmp/noVNC
+RUN git clone --depth 1 --branch "${WEB_SOCKIFY_TAG}" https://github.com/novnc/websockify /tmp/noVNC/utils/websockify
+
+RUN cd /tmp/noVNC \
+    && rm -rf .git* \
+    docs \
+    tests \
+    snap \
+    .eslint* \
+    karma.conf.js
+
+RUN cd /tmp/noVNC/utils/websockify \
+    && rm -rf .git* \
+    docker \
+    docs \
+    tests \
+    Windows \
+    .eslint* \
+    karma.conf.js
+
+# Add index.html to all directories
+RUN echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='/vnc.html'\"/></head>" > /tmp/noVNC/index.html
+RUN for dir in `find /tmp/noVNC -type d` ; do cp /tmp/noVNC/index.html $dir/index.html ; done
+
 
 FROM alpine:${ALPINE_VERSION}
-
-ARG NO_VNC_TAG=v1.4.0 \
-    WEB_SOCKIFY_TAG=v0.11.0
-
-LABEL org.opencontainers.image.source="https://github.com/10to7/novnc" \
-      org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.title="novnc" \
-      org.opencontainers.image.description="Alpine Linux with noVNC" \
-      org.opencontainers.image.url="10to7/novnc" \
-      org.opencontainers.image.vendor="10to7" \
-      org.opencontainers.image.documentation="https://github.com/10to7/novnc"
 
 # Setup environment variables
 ENV HOME=/root \
@@ -26,29 +50,32 @@ ENV HOME=/root \
 # Install dependencies and then clean up
 RUN apk add \
     bash \
-    git \
     socat \
     supervisor \
     x11vnc \
     xvfb \
     fluxbox --no-cache \
-    && git clone --depth 1 --branch "${NO_VNC_TAG}" https://github.com/novnc/noVNC.git /root/noVNC \
-    && git clone --depth 1 --branch "${WEB_SOCKIFY_TAG}" https://github.com/novnc/websockify /root/noVNC/utils/websockify \
-    && rm -rf /root/noVNC/.git \
-    && rm -rf /root/noVNC/.gitignore \
-    && rm -rf /root/noVNC/.gitmodules \
-    && rm -rf /root/noVNC/.github \
-    && rm -rf /root/noVNC/.eslintignore \
-    && rm -rf /root/noVNC/.eslintrc \
-    && rm -rf /root/noVNC/tests \
-    && rm -rf /root/noVNC/utils/websockify/.git \
-    && rm -rf /root/noVNC/utils/websockify/.gitignore \
-    && apk del git \
     && rm -rf /var/cache/apk/*
 
+# add novnc
+COPY --from=git_sources /tmp/noVNC /root/noVNC
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Expose ports for noVNC and X11
 EXPOSE 8080 6000
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+ARG NO_VNC_TAG \
+    WEB_SOCKIFY_TAG \
+    TARGETPLATFORM \
+    ALPINE_VERSION
+
+LABEL org.opencontainers.image.source="https://github.com/10to7/novnc" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.title="novnc" \
+      org.opencontainers.image.description="Alpine Linux with noVNC" \
+      org.opencontainers.image.url="10to7/novnc" \
+      org.opencontainers.image.vendor="10to7" \
+      org.opencontainers.image.documentation="https://github.com/10to7/novnc" \
+      org.opencontainers.image.version=${TARGETPLATFORM}-alpine:${ALPINE_VERSION},novnc:${NO_VNC_TAG},websockify:${WEB_SOCKIFY_TAG}

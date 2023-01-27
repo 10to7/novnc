@@ -1,0 +1,3 @@
+#!/bin/bash
+# buildx pushed the images, prevent the default push
+echo "images were pushed to docker hub"

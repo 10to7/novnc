@@ -1,13 +1,16 @@
 # noVNC docker image
+src: <https://github.com/10to7/novnc>
 Used for a browser based X11 display.
 
-Based on https://github.com/psharkey/docker/tree/master/novnc
+Based on <https://github.com/psharkey/docker/tree/master/novnc>
 
 ## Example
 
 You can run unix applications that require a $DISPLAY within a docker container.
 
 Below is an example `docker-compose.yml` opening intelliJ inside a browser on port 8080.
+
+[novnc example gist](https://gist.github.com/3adb151df0501f1d609c2472bd7458bc.git)
 ```yaml
 version: '3.8'
 
@@ -32,4 +35,4 @@ services:
 
 `docker-compose up -d`
 
-In a browser open http://localhost:8080/vnc.html
+In a browser open <http://localhost:8080/vnc.html>
