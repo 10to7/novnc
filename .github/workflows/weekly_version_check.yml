@@ -3,6 +3,7 @@ name: Compare Repo Tags and Docker Image Version
 on:
   schedule:
     - cron:  '0 0 * * 1' # run every Monday at 00:00
+  workflow_dispatch:
 
 env:
   git_repos: ("novnc/noVNC" "novnc/websockify")
