@@ -3,6 +3,8 @@ name: Compare Repo Tags and Docker Image Version
 on:
   schedule:
     - cron:  '0 0 * * 1' # run every Monday at 00:00
+  workflow_dispatch:
+  push:
 
 env:
   git_repos: ("novnc/noVNC" "novnc/websockify")
@@ -18,17 +20,14 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-
-    - name: Set global function
-      run: chmod +x .github/workflows/utils.sh; .github/workflows/utils.sh
     
     - name: Switch to the update-versions branch
       run: |
-        git config --global user.email "${{ env.GIT_EMAIL }}"
-        git config --global user.name "${{ env.GIT_NAME }}"
+        git config --global user.email "${{ vars.GIT_EMAIL }}"
+        git config --global user.name "${{ vars.GIT_NAME }}"
         git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-
-        if ! git show-branch ${working_branch}; then
+        git fetch --all
+        if [ -z $(git ls-remote --heads origin ${working_branch}) ]; then
           git branch ${working_branch}
         fi
 
@@ -36,45 +35,49 @@ jobs:
 
     - name: Get external repository tags
       run: |
-        for repo in "${git_repos[@]}"
+        . .github/workflows/utils.sh
+        declare -a repos=${git_repos}
+
+        for repo in "${repos[@]}"
         do
           # Fetch all tags
           tags=$(curl -s https://api.github.com/repos/${repo}/tags?per_page=5)
-
-          # Filter out tags that contain "-beta"
-          filtered_tags=$(echo $tags | jq '.[] | select(.name | test("-beta"; "i") | not)')
-
           # Get the latest tag
-          latest_tag=$(echo $filtered_tags | jq 'sort_by(.name) | last | .name')
-          echo "::set-env name=$(normalise ${repo})_LATEST_TAG::${latest_tag}"
+          latest_tag=$(echo $tags | jq -r '[.[] | select(.name | test("-beta"; "i") | not) | .name][0]')
+          echo "$(normalise ${repo})_LATEST_TAG=${latest_tag}" >> $GITHUB_ENV
         done
 
     - name: Get latest version of Docker image
       run: |
-        for repo in "${docker_repos[@]}"
+        . .github/workflows/utils.sh
+        declare -a repos=${docker_repos}
+
+        for repo in "${repos[@]}"
         do
           # Fetch all tags
-          tag=$(curl https://registry.hub.docker.com/v2/repositories/library/${repo}/tags?page_size=5 | jq -r '.results[] | .name')
-          
-          # Filter out tags that contain "rc" or "latest"
-          filtered_tags=$(echo $tags | awk '!/(rc|latest)/ {print}') 
-
+          tags=$(curl https://registry.hub.docker.com/v2/repositories/library/${repo}/tags?page_size=5)
           # Get the latest tag
-          latest_tag=$(echo | head -n1)
-          echo "::set-env name=$(normalise ${repo})_LATEST_TAG::${latest_tag}"
+          latest_tag=$(echo $tags | jq -r '[.results[] | select(.name | test("latest"; "i") | not) | select(.name | test("rc"; "i") | not) | .name][0]')
+          echo "$(normalise ${repo})_LATEST_TAG=${latest_tag}" >> $GITHUB_ENV
         done
 
     - name: Compare tags to .env file
       id: check_tags
       run: |
-        repos=("${git_repos[@]}" "${docker_repos[@]}")
+        . .github/workflows/utils.sh
+        declare -a git_repo=${git_repos}
+        declare -a docker_repo=${docker_repos}
+        declare -a repos=("${git_repo[@]}" "${docker_repo[@]}")
         changes=false
-        commit_message = "Updating dependencies, using: "
+        commit_message="Updating dependencies, using: "
+
         for repo in "${repos[@]}"
         do
           repo=$(normalise ${repo})
           env_tag=$(grep ${repo}_TAG .env | awk -F '=' '{print $2}')
-          latest_tag=${{ env.${repo}_LATEST_TAG }}
+          latest_tag_key=$(echo ${repo}_LATEST_TAG)
+          latest_tag=${!latest_tag_key}
+          echo "Checking ${repo} has a new tag - current: ${env_tag}, new ${latest_tag}"
           if [ $env_tag != $latest_tag ]; then
               echo "${repo} has a new tag: ${latest_tag}"
               sed -i "s/^${repo}_TAG=.*/${repo}_TAG=${latest_tag}/g" .env
@@ -84,29 +87,38 @@ jobs:
               changes=true
           fi
         done
+        echo "has_changes=${changes}" >> $GITHUB_ENV
+        echo "commit_message=${commit_message}" >> $GITHUB_ENV
 
     - name: Add changed files to git commit
-      if: steps.check_tags.outputs.changes == 'true'
+      if: ${{ env.has_changes == 'true' }}
       run: |
+        git config --global user.email "${{ vars.GIT_EMAIL }}"
+        git config --global user.name "${{ vars.GIT_NAME }}"
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+        git fetch --all
         git add .env Dockerfile docker-compose.yml
-        git commit -m steps.check_tags.outputs.commit_message
+        git commit -m "${commit_message}"
+        git push -u https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY ${working_branch}
+        git pull
 
-        UPSTREAM_BRANCH=$(git rev-parse --abbrev-ref --quiet @{u})
-        if [ -z "$UPSTREAM_BRANCH" ]; then
-          # If there is no upstream branch, add one.
-          git branch --set-upstream-to=origin/$(git rev-parse --abbrev-ref HEAD)
-        fi
-
-        git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/OWNER/REPO.git ${working_branch}
-
-    - name: Create merge request if changes detected
-      if: steps.check_tags.outputs.changes == 'true'
-      run: |
-        echo "Changes detected. Creating merge request..."
-        uses: peter-evans/create-pull-request@v3
-        with:
-          title: Update to latest versions
-          body: |
-            This merge request updates the repository to the latest versions of the git tags and Docker image.
-          head: update-to-latest-versions
-          base: main
+    - name: Create pull request
+      if: ${{ env.has_changes == 'true' }}
+      uses: thomaseizinger/create-pull-request@master
+      with:
+        title: Update to latest versions
+        body: |
+          This merge request updates the repository to the latest versions of the git tags and Docker image.
+          ${{ env.commit_message }}
+        head: ${{ env.working_branch }}
+        base:  ${{ env.target_branch }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Create merge request if changes detected
+    #   if: ${{ env.has_changes == 'true' }}
+    #   uses: peter-evans/create-pull-request@v4.2.3
+    #   with:
+    #     title: Update to latest versions
+    #     body: |
+    #       This merge request updates the repository to the latest versions of the git tags and Docker image.
+    #     # branch: ${working_branch}
+    #     base:  ${working_branch}
