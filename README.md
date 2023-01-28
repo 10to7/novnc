@@ -1,3 +1,4 @@
+[![.github/workflows/weekly_version_check.yml](https://github.com/10to7/novnc/actions/workflows/weekly_version_check.yml/badge.svg)](https://github.com/10to7/novnc/actions/workflows/weekly_version_check.yml)
 # noVNC docker image
 src: <https://github.com/10to7/novnc>
 Used for a browser based X11 display.

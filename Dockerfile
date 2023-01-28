@@ -1,17 +1,17 @@
-ARG ALPINE_VERSION=3
-ARG NO_VNC_TAG=v1.4.0
-ARG WEB_SOCKIFY_TAG=v0.11.0
+ARG ALPINE_TAG=3
+ARG NOVNC_NOVNC_TAG=v1.4.0
+ARG NOVNC_WEBSOCKIFY_TAG=v0.11.0
 
-FROM alpine:${ALPINE_VERSION} AS git_sources
+FROM alpine:${ALPINE_TAG} AS git_sources
 RUN apk add \
     bash \
     git
 
-ARG NO_VNC_TAG \
-    WEB_SOCKIFY_TAG
+ARG NOVNC_NOVNC_TAG \
+    NOVNC_WEBSOCKIFY_TAG
 
-RUN git clone --depth 1 --branch "${NO_VNC_TAG}" https://github.com/novnc/noVNC.git /tmp/noVNC
-RUN git clone --depth 1 --branch "${WEB_SOCKIFY_TAG}" https://github.com/novnc/websockify /tmp/noVNC/utils/websockify
+RUN git clone --depth 1 --branch "${NOVNC_NOVNC_TAG}" https://github.com/novnc/noVNC.git /tmp/noVNC
+RUN git clone --depth 1 --branch "${NOVNC_WEBSOCKIFY_TAG}" https://github.com/novnc/websockify /tmp/noVNC/utils/websockify
 
 RUN cd /tmp/noVNC \
     && rm -rf .git* \
@@ -35,7 +35,7 @@ RUN echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='/vnc.html'\"/></h
 RUN for dir in `find /tmp/noVNC -type d` ; do cp /tmp/noVNC/index.html $dir/index.html ; done
 
 
-FROM alpine:${ALPINE_VERSION}
+FROM alpine:${ALPINE_TAG}
 
 # Setup environment variables
 ENV HOME=/root \
@@ -66,10 +66,10 @@ EXPOSE 8080 6000
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
-ARG NO_VNC_TAG \
-    WEB_SOCKIFY_TAG \
+ARG NOVNC_NOVNC_TAG \
+    NOVNC_WEBSOCKIFY_TAG \
     TARGETPLATFORM \
-    ALPINE_VERSION
+    ALPINE_TAG
 
 LABEL org.opencontainers.image.source="https://github.com/10to7/novnc" \
       org.opencontainers.image.licenses="MIT" \
@@ -78,4 +78,4 @@ LABEL org.opencontainers.image.source="https://github.com/10to7/novnc" \
       org.opencontainers.image.url="10to7/novnc" \
       org.opencontainers.image.vendor="10to7" \
       org.opencontainers.image.documentation="https://github.com/10to7/novnc" \
-      org.opencontainers.image.version=${TARGETPLATFORM}-alpine:${ALPINE_VERSION},novnc:${NO_VNC_TAG},websockify:${WEB_SOCKIFY_TAG}
+      org.opencontainers.image.version=${TARGETPLATFORM}-alpine:${ALPINE_TAG},novnc:${NOVNC_NOVNC_TAG},websockify:${NOVNC_WEBSOCKIFY_TAG}
