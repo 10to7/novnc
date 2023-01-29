@@ -1,9 +1,18 @@
 [![.github/workflows/weekly_version_check.yml](https://github.com/10to7/novnc/actions/workflows/weekly_version_check.yml/badge.svg)](https://github.com/10to7/novnc/actions/workflows/weekly_version_check.yml)
+
 # noVNC docker image
-src: <https://github.com/10to7/novnc>
+
 Used for a browser based X11 display.
 
-Based on <https://github.com/psharkey/docker/tree/master/novnc>
+You can find us on:
+* [GitHub](https://github.com/10to7/novnc)
+* [Docker Hub](https://hub.docker.com/r/10to7/novnc)
+
+Dependencies:
+* [noVNC](https://github.com/novnc/noVNC)
+* [Websockify](https://github.com/novnc/websockify)
+
+Based on a noVNC docker setup by psharkey, which can be found [here](https://github.com/psharkey/docker/tree/master/novnc).
 
 ## Example
 
@@ -11,7 +20,7 @@ You can run unix applications that require a $DISPLAY within a docker container.
 
 Below is an example `docker-compose.yml` opening intelliJ inside a browser on port 8080.
 
-[novnc example gist](https://gist.github.com/3adb151df0501f1d609c2472bd7458bc.git)
+[noVNC example gist](https://gist.github.com/3adb151df0501f1d609c2472bd7458bc.git)
 ```yaml
 version: '3.8'
 
