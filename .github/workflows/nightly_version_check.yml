@@ -2,9 +2,12 @@ name: All dependencies are up to date
 
 on:
   schedule:
-    # Schedule to run every night at 00:00
-    - cron:  '0 0 * * *'
+    # Schedule to run every night at 02:46
+    - cron:  '46 2 * * *'
   workflow_dispatch:
+  push:
+    branches:
+    - main
 
 env:
   git_repos: ("novnc/noVNC" "novnc/websockify")
