@@ -15,7 +15,7 @@ env:
   
   
 jobs:
-  check-tags:
+  check-dependencies-versions:
     runs-on: ubuntu-latest
 
     steps:
@@ -58,6 +58,7 @@ jobs:
         declare -a docker_repo=${docker_repos}
         declare -a repos=("${git_repo[@]}" "${docker_repo[@]}")
         changes=false
+        version_message="Out of date dependencies:"
 
         for repo in "${repos[@]}"
         do
@@ -67,16 +68,14 @@ jobs:
           latest_tag=${!latest_tag_key}
           echo "Checking ${repo} has a new tag - current: ${env_tag}, new ${latest_tag}"
           if [ $env_tag != $latest_tag ]; then
-              echo "${repo} has a new tag: ${latest_tag}"
-              sed -i "s/^${repo}_TAG=.*/${repo}_TAG=${latest_tag}/g" .env
-              sed -i "s/^ARG ${repo}_TAG=.*/ARG ${repo}_TAG=${latest_tag}/g" Dockerfile
-              sed -i "s/${repo}_TAG:-.*/${repo}_TAG:-${latest_tag}}/g" docker-compose.yml
               changes=true
+              version_message=" ${version_message} ${repo}_TAG=${latest_tag}"
           fi
         done
         echo "has_changes=${changes}" >> $GITHUB_ENV
+        echo "version_message=${version_message}" >> $GITHUB_ENV
 
     - name: Fail if there are any version differences
       if: ${{ env.has_changes == 'true' }}
       run: |
-        exit 1
+        echo "::error ${version_message}"
