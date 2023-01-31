@@ -78,4 +78,5 @@ jobs:
     - name: Fail if there are any version differences
       if: ${{ env.has_changes == 'true' }}
       run: |
-        echo "::error ${version_message}"
+        echo "${version_message}"
+        exit 1
