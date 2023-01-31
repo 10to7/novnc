@@ -1,3 +1,4 @@
+[![Weekly update generator](https://github.com/10to7/novnc/actions/workflows/weekly_version_check.yml/badge.svg)](https://github.com/10to7/novnc/actions/workflows/weekly_version_check.yml)
 [![All dependencies are up to date](https://github.com/10to7/novnc/actions/workflows/nightly_version_check.yml/badge.svg)](https://github.com/10to7/novnc/actions/workflows/nightly_version_check.yml)
 
 # noVNC docker image
