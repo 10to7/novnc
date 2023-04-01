@@ -45,7 +45,7 @@ jobs:
           # Fetch all tags
           tags=$(curl https://registry.hub.docker.com/v2/repositories/library/${repo}/tags?page_size=5)
           # Get the latest tag
-          latest_tag=$(echo $tags | jq -r '[.results[] | select(.name | test("latest"; "i") | not) | select(.name | test("rc"; "i") | not) | .name][0]')
+          latest_tag=$(echo $tags | jq -r '[.results[] | select(.name | test("latest"; "i") | not) | select(.name | test("rc"; "i") | not) | select(.name | test("edge"; "i") | not) | .name][0]')
           echo "$(normalise ${repo})_LATEST_TAG=${latest_tag}" >> $GITHUB_ENV
         done
 
