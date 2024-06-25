@@ -4,10 +4,10 @@ services:
     build:
       context: .
       args:
-        ALPINE_TAG: ${ALPINE_TAG:-3.18.5}
+        ALPINE_TAG: ${ALPINE_TAG:-3.20.1}
         TARGETPLATFORM: amd64
-        NOVNC_NOVNC_TAG: ${NOVNC_NOVNC_TAG:-v1.4.0}
-        NOVNC_WEBSOCKIFY_TAG: ${NOVNC_WEBSOCKIFY_TAG:-v0.11.0}
+        NOVNC_NOVNC_TAG: ${NOVNC_NOVNC_TAG:-v1.5.0}
+        NOVNC_WEBSOCKIFY_TAG: ${NOVNC_WEBSOCKIFY_TAG:-v0.12.0}
     image: 10to7/novnc:latest
     environment:
       # Adjust to your screen size
