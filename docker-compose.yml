@@ -4,7 +4,7 @@ services:
     build:
       context: .
       args:
-        ALPINE_TAG: ${ALPINE_TAG:-20240807}
+        ALPINE_TAG: ${ALPINE_TAG:-3.20.3}
         TARGETPLATFORM: amd64
         NOVNC_NOVNC_TAG: ${NOVNC_NOVNC_TAG:-v1.5.0}
         NOVNC_WEBSOCKIFY_TAG: ${NOVNC_WEBSOCKIFY_TAG:-v0.12.0}
